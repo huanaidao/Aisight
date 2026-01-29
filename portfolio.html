@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>投资组合</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+body { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); min-height: 100vh; padding-bottom: 80px; }
+.glass { background: rgba(102, 126, 234, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+.glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
+.nav-glass { background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(20px); border-top: 2px solid rgba(255, 255, 255, 0.5); }
+</style>
+</head>
+<body>
+
+<div class="glass sticky top-0 z-50">
+<div class="max-w-md mx-auto px-4 py-3 text-center">
+<h1 class="text-lg font-bold text-white" id="pageTitle">投资组合</h1>
+</div>
+</div>
+
+<div class="max-w-md mx-auto px-4 py-4 space-y-4">
+
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>➕</span><span id="addTitle">添加持仓</span>
+</h2>
+<input type="text" id="addSymbol" placeholder="股票代码" class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-purple-500 outline-none mb-3">
+<div class="grid grid-cols-2 gap-3 mb-3">
+<input type="number" id="addCost" placeholder="成本价" step="0.01" class="px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-purple-500 outline-none">
+<input type="number" id="addShares" placeholder="持股数" step="1" class="px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-purple-500 outline-none">
+</div>
+<button onclick="addHolding()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-2xl active:scale-95 transition-all" id="addBtn">
+添加持仓
+</button>
+</div>
+
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>💼</span><span id="holdingsTitle">我的持仓</span>
+</h2>
+<div id="holdingsList" class="space-y-4"></div>
+</div>
+
+</div>
+
+<div class="fixed bottom-0 left-0 right-0 nav-glass z-50">
+<div class="max-w-md mx-auto flex justify-around py-3">
+<a href="index.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navHome">Home</span>
+</a>
+<a href="portfolio.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+<span class="text-xs font-bold text-white" id="navAisight">投资组合</span>
+</a>
+<a href="profile.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navProfile">个人中心</span>
+</a>
+</div>
+</div>
+
+<script>
+let currentLang = localStorage.getItem('language') || 'zh';
+
+const translations = {
+zh: {
+pageTitle: '投资组合',
+addTitle: '添加持仓',
+addBtn: '添加持仓',
+holdingsTitle: '我的持仓',
+navHome: '首页',
+navAisight: '投资组合',
+navProfile: '个人中心',
+symbolPlaceholder: '股票代码',
+costPlaceholder: '成本价',
+sharesPlaceholder: '持股数',
+cost: '成本',
+shares: '持股',
+price: '当前价',
+value: '市值',
+pnl: '盈亏',
+delete: '删除',
+analyze: 'AI分析',
+loading: '加载中...',
+noHoldings: '暂无持仓',
+analyzing: 'AI分析中...',
+complete: '分析完成',
+fillAll: '请填写完整信息',
+added: '已添加',
+confirmDelete: '确定删除'
+},
+en: {
+pageTitle: 'Portfolio',
+addTitle: 'Add Holdings',
+addBtn: 'Add',
+holdingsTitle: 'My Holdings',
+navHome: 'Home',
+navAisight: 'Portfolio',
+navProfile: 'Profile',
+symbolPlaceholder: 'Symbol',
+costPlaceholder: 'Cost',
+sharesPlaceholder: 'Shares',
+cost: 'Cost',
+shares: 'Shares',
+price: 'Price',
+value: 'Value',
+pnl: 'P&L',
+delete: 'Delete',
+analyze: 'AI Analyze',
+loading: 'Loading...',
+noHoldings: 'No holdings',
+analyzing: 'AI Analyzing...',
+complete: 'Complete',
+fillAll: 'Please fill all',
+added: 'Added',
+confirmDelete: 'Delete'
+}
+};
+
+const stockDatabase = {
+'NVDA': { price: 875.28, change: 45.23, changePercent: '+5.45%' },
+'AAPL': { price: 185.92, change: -2.15, changePercent: '-1.14%' },
+'MSFT': { price: 412.75, change: 8.45, changePercent: '+2.09%' },
+'GOOGL': { price: 142.33, change: -1.82, changePercent: '-1.26%' },
+'TSLA': { price: 238.45, change: 12.30, changePercent: '+5.44%' },
+'META': { price: 482.19, change: -5.67, changePercent: '-1.16%' },
+'AMZN': { price: 178.25, change: 3.42, changePercent: '+1.96%' },
+'AMD': { price: 156.78, change: -4.23, changePercent: '-2.63%' },
+'INTC': { price: 42.88, change: 0.95, changePercent: '+2.27%' },
+'MU': { price: 98.45, change: 5.67, changePercent: '+6.11%' }
+};
+
+function applyLanguage() {
+const t = translations[currentLang];
+document.getElementById('pageTitle').textContent = t.pageTitle;
+document.getElementById('addTitle').textContent = t.addTitle;
+document.getElementById('addBtn').textContent = t.addBtn;
+document.getElementById('holdingsTitle').textContent = t.holdingsTitle;
+document.getElementById('navHome').textContent = t.navHome;
+document.getElementById('navAisight').textContent = t.navAisight;
+document.getElementById('navProfile').textContent = t.navProfile;
+document.getElementById('addSymbol').placeholder = t.symbolPlaceholder;
+document.getElementById('addCost').placeholder = t.costPlaceholder;
+document.getElementById('addShares').placeholder = t.sharesPlaceholder;
+}
+
+async function addHolding() {
+const t = translations[currentLang];
+const symbol = document.getElementById('addSymbol').value.trim().toUpperCase();
+const cost = parseFloat(document.getElementById('addCost').value);
+const shares = parseInt(document.getElementById('addShares').value);
+
+if (!symbol || !cost || !shares || cost <= 0 || shares <= 0) {
+alert(t.fillAll);
+return;
+}
+
+const holdings = JSON.parse(localStorage.getItem('stockHoldings') || '{}');
+holdings[symbol] = { cost, shares };
+localStorage.setItem('stockHoldings', JSON.stringify(holdings));
+
+document.getElementById('addSymbol').value = '';
+document.getElementById('addCost').value = '';
+document.getElementById('addShares').value = '';
+
+loadHoldings();
+alert(`✅ ${symbol} ${t.added}`);
+}
+
+function loadHoldings() {
+const t = translations[currentLang];
+const holdings = JSON.parse(localStorage.getItem('stockHoldings') || '{}');
+const list = document.getElementById('holdingsList');
+const symbols = Object.keys(holdings);
+
+if (symbols.length === 0) {
+list.innerHTML = `<div class="text-center py-8 text-gray-400"><div class="text-4xl mb-2">💼</div><div class="text-sm">${t.noHoldings}</div></div>`;
+return;
+}
+
+list.innerHTML = symbols.map(symbol => {
+const h = holdings[symbol];
+let stockData = stockDatabase[symbol];
+
+if (!stockData) {
+const basePrice = Math.random() * 500 + 50;
+const change = (Math.random() - 0.5) * basePrice * 0.1;
+stockData = {
+price: parseFloat(basePrice.toFixed(2)),
+change: parseFloat(change.toFixed(2)),
+changePercent: (change >= 0 ? '+' : '') + ((change / basePrice) * 100).toFixed(2) + '%'
+};
+}
+
+const currentPrice = stockData.price;
+const totalCost = h.cost * h.shares;
+const totalValue = currentPrice * h.shares;
+const pnl = totalValue - totalCost;
+const pnlPercent = ((currentPrice - h.cost) / h.cost * 100);
+const pnlColor = pnl >= 0 ? 'text-green-600' : 'text-red-600';
+const borderColor = pnl >= 0 ? 'border-green-500' : 'border-red-500';
+
+return `
+<div class="bg-white/90 rounded-2xl p-4 border-l-4 ${borderColor}">
+<div class="flex justify-between items-center mb-3">
+<div class="font-bold text-xl text-purple-600">${symbol}</div>
+<button onclick="deleteHolding('${symbol}')" class="text-red-500 text-xs font-semibold px-3 py-1 rounded-lg bg-red-50">${t.delete}</button>
+</div>
+
+<div class="grid grid-cols-2 gap-2 mb-3">
+<div class="bg-gray-50 rounded-lg p-2">
+<div class="text-xs text-gray-500">${t.cost}</div>
+<div class="font-bold text-sm">$${h.cost.toFixed(2)}</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-2">
+<div class="text-xs text-gray-500">${t.shares}</div>
+<div class="font-bold text-sm">${h.shares}</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-2">
+<div class="text-xs text-gray-500">${t.price}</div>
+<div class="font-bold text-sm">$${currentPrice.toFixed(2)}</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-2">
+<div class="text-xs text-gray-500">${t.value}</div>
+<div class="font-bold text-sm">$${totalValue.toFixed(0)}</div>
+</div>
+</div>
+
+<div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 mb-3">
+<div class="text-xs text-gray-600 text-center mb-1">${t.pnl}</div>
+<div class="font-bold text-xl text-center ${pnlColor}">
+${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(2)}
+</div>
+<div class="text-center ${pnlColor} font-semibold text-sm">
+${pnl >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
+</div>
+</div>
+
+<button onclick="analyzeHolding('${symbol}')" id="btn-${symbol}" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2.5 rounded-xl text-sm active:scale-95 transition-all">
+🤖 ${t.analyze}
+</button>
+
+<div id="reco-${symbol}" class="hidden mt-3 space-y-2">
+<div class="bg-green-50 border-l-4 border-green-500 rounded-xl p-3">
+<div class="text-xs font-bold text-green-700 mb-1">${currentLang === 'zh' ? '短期目标' : 'Short Target'}</div>
+<div class="text-xs text-gray-700" id="short-${symbol}">${t.loading}</div>
+</div>
+<div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-xl p-3">
+<div class="text-xs font-bold text-yellow-700 mb-1">${currentLang === 'zh' ? '中期目标' : 'Mid Target'}</div>
+<div class="text-xs text-gray-700" id="mid-${symbol}">${t.loading}</div>
+</div>
+<div class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-3">
+<div class="text-xs font-bold text-blue-700 mb-1">${currentLang === 'zh' ? '长期目标' : 'Long Target'}</div>
+<div class="text-xs text-gray-700" id="long-${symbol}">${t.loading}</div>
+</div>
+</div>
+</div>
+`;
+}).join('');
+}
+
+function analyzeHolding(symbol) {
+const t = translations[currentLang];
+const btn = document.getElementById(`btn-${symbol}`);
+const orig = btn.textContent;
+
+btn.textContent = `🤖 ${t.analyzing}`;
+btn.disabled = true;
+
+let stockData = stockDatabase[symbol];
+if (!stockData) {
+const basePrice = Math.random() * 500 + 50;
+stockData = { price: parseFloat(basePrice.toFixed(2)) };
+}
+
+const p = stockData.price;
+
+setTimeout(() => {
+const short = currentLang === 'zh' ? 
+`$${(p * 1.08).toFixed(2)} - 回调后加仓30%，突破后持有` :
+`$${(p * 1.08).toFixed(2)} - Add 30% on pullback, hold on break`;
+
+const mid = currentLang === 'zh' ?
+`$${(p * 1.18).toFixed(2)} - 持有核心60%，波段40%` :
+`$${(p * 1.18).toFixed(2)} - Hold 60% core, trade 40%`;
+
+const long = currentLang === 'zh' ?
+`$${(p * 1.35).toFixed(2)} - 长期持有50%，保留现金30%` :
+`$${(p * 1.35).toFixed(2)} - Long hold 50%, keep 30% cash`;
+
+document.getElementById(`short-${symbol}`).textContent = short;
+document.getElementById(`mid-${symbol}`).textContent = mid;
+document.getElementById(`long-${symbol}`).textContent = long;
+
+document.getElementById(`reco-${symbol}`).classList.remove('hidden');
+
+btn.textContent = `✅ ${t.complete}`;
+setTimeout(() => {
+btn.textContent = orig;
+btn.disabled = false;
+}, 2000);
+}, 1500);
+}
+
+function deleteHolding(symbol) {
+const t = translations[currentLang];
+if (!confirm(`${t.confirmDelete} ${symbol}?`)) return;
+const holdings = JSON.parse(localStorage.getItem('stockHoldings') || '{}');
+delete holdings[symbol];
+localStorage.setItem('stockHoldings', JSON.stringify(holdings));
+loadHoldings();
+}
+
+applyLanguage();
+loadHoldings();
+</script>
+
+</body>
+</html>

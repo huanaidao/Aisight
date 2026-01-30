@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aisight</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+body { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); min-height: 100vh; padding-bottom: 80px; }
+.glass { background: rgba(102, 126, 234, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
+.nav-glass { background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(20px); border-top: 2px solid rgba(255, 255, 255, 0.5); box-shadow: 0 -4px 12px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="glass sticky top-0 z-50">
+<div class="max-w-md mx-auto px-4 py-3 text-center">
+<h1 class="text-lg font-bold text-white" id="headerTitle">Aisight</h1>
+<p class="text-xs text-white/90" id="headerSubtitle">AI驱动的股票分析助手</p>
+</div>
+</div>
+
+<div class="max-w-md mx-auto px-4 py-4 space-y-4">
+
+<!-- Stock Analysis -->
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>🎯</span><span id="stockAnalysisTitle">个股分析</span>
+</h2>
+<input type="text" id="stockInput" placeholder="输入股票代码 (e.g., NVDA)" 
+class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none text-center font-semibold mb-3">
+<button onclick="analyzeStock()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-2xl active:scale-95 transition-all" id="analyzeBtn">
+立即分析
+</button>
+<div id="statusText" class="text-center text-sm mt-2 min-h-5"></div>
+</div>
+
+<!-- Macro Data -->
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>🌍</span><span id="macroTitle">宏观经济</span>
+</h2>
+<div id="macroGrid" class="grid grid-cols-2 gap-3 mb-3"></div>
+<div id="aiSummary" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl p-4 text-sm"></div>
+</div>
+
+<!-- AI News -->
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>🤖</span><span id="newsTitle">AI新闻</span>
+</h2>
+<div id="newsList" class="space-y-3"></div>
+</div>
+
+<!-- AI Industry -->
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>🔬</span><span id="industryTitle">AI产业链</span>
+</h2>
+<div id="industryList" class="space-y-3"></div>
+</div>
+
+<!-- AI Stock Crash News -->
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>📉</span><span id="crashTitle">AI股票暴跌新闻</span>
+</h2>
+<div id="crashList" class="space-y-3"></div>
+</div>
+
+</div>
+
+<!-- Bottom Nav -->
+<div class="fixed bottom-0 left-0 right-0 nav-glass z-50">
+<div class="max-w-md mx-auto flex justify-around py-3">
+<a href="index.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+<span class="text-xs font-bold text-white" id="navHome">首页</span>
+</a>
+<a href="portfolio.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navAisight">投资组合</span>
+</a>
+<a href="profile.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navProfile">个人中心</span>
+</a>
+</div>
+</div>
+
+<script>
+let currentLang = localStorage.getItem('language') || 'zh';
+
+const translations = {
+zh: {
+headerTitle: 'Aisight',
+headerSubtitle: 'AI驱动的股票分析助手',
+stockAnalysisTitle: '个股分析',
+analyzeBtn: '立即分析',
+macroTitle: '宏观经济',
+newsTitle: 'AI新闻',
+industryTitle: 'AI产业链',
+crashTitle: 'AI股票暴跌新闻',
+navHome: '首页',
+navAisight: '投资组合',
+navProfile: '个人中心',
+inputPlaceholder: '输入股票代码',
+analyzing: '正在AI深度分析...',
+saving: '💾 正在保存到个人中心...',
+complete: '✅ 已保存到个人中心!',
+redirecting: '正在跳转...',
+enterSymbol: '请输入股票代码',
+expected: '预期',
+summary: '💡 经济整体向好,通胀缓解,就业强劲。建议60%科技股,30%消费制造,10%现金。'
+},
+en: {
+headerTitle: 'Aisight',
+headerSubtitle: 'AI-Powered Stock Analysis',
+stockAnalysisTitle: 'Stock Analysis',
+analyzeBtn: 'Analyze Now',
+macroTitle: 'Macro Data',
+newsTitle: 'AI News',
+industryTitle: 'AI Industry',
+crashTitle: 'AI Stock Crashes',
+navHome: 'Home',
+navAisight: 'Portfolio',
+navProfile: 'Profile',
+inputPlaceholder: 'Enter Symbol',
+analyzing: 'AI Deep Analysis...',
+saving: '💾 Saving to Profile...',
+complete: '✅ Saved to Profile!',
+redirecting: 'Redirecting...',
+enterSymbol: 'Please enter symbol',
+expected: 'Exp',
+summary: '💡 Economy healthy, inflation easing, strong employment. Recommend 60% tech, 30% consumer/manufacturing, 10% cash.'
+},
+es: {
+headerTitle: 'Aisight',
+headerSubtitle: 'Análisis de Acciones Impulsado por IA',
+stockAnalysisTitle: 'Análisis de Acciones',
+analyzeBtn: 'Analizar Ahora',
+macroTitle: 'Datos Macroeconómicos',
+newsTitle: 'Noticias de IA',
+industryTitle: 'Industria de IA',
+crashTitle: 'Caídas de Acciones de IA',
+navHome: 'Inicio',
+navAisight: 'Portafolio',
+navProfile: 'Perfil',
+inputPlaceholder: 'Ingrese Símbolo',
+analyzing: 'Análisis Profundo de IA...',
+saving: '💾 Guardando en Perfil...',
+complete: '✅ ¡Guardado en Perfil!',
+redirecting: 'Redirigiendo...',
+enterSymbol: 'Por favor ingrese símbolo',
+expected: 'Esp',
+summary: '💡 Economía saludable, inflación reduciéndose, empleo fuerte. Recomendar 60% tecnología, 30% consumo/manufactura, 10% efectivo.'
+}
+};
+
+function applyLanguage() {
+const t = translations[currentLang];
+document.getElementById('headerTitle').textContent = t.headerTitle;
+document.getElementById('headerSubtitle').textContent = t.headerSubtitle;
+document.getElementById('stockAnalysisTitle').textContent = t.stockAnalysisTitle;
+document.getElementById('analyzeBtn').textContent = t.analyzeBtn;
+document.getElementById('macroTitle').textContent = t.macroTitle;
+document.getElementById('newsTitle').textContent = t.newsTitle;
+document.getElementById('industryTitle').textContent = t.industryTitle;
+document.getElementById('crashTitle').textContent = t.crashTitle;
+document.getElementById('navHome').textContent = t.navHome;
+document.getElementById('navAisight').textContent = t.navAisight;
+document.getElementById('navProfile').textContent = t.navProfile;
+document.getElementById('stockInput').placeholder = t.inputPlaceholder;
+}
+
+// 内置股票数据库
+const stockDatabase = {
+'NVDA': { price: 875.28, change: 45.23, changePercent: '+5.45%', volume: 45230000 },
+'AAPL': { price: 185.92, change: -2.15, changePercent: '-1.14%', volume: 52100000 },
+'MSFT': { price: 412.75, change: 8.45, changePercent: '+2.09%', volume: 28900000 },
+'GOOGL': { price: 142.33, change: -1.82, changePercent: '-1.26%', volume: 31200000 },
+'TSLA': { price: 238.45, change: 12.30, changePercent: '+5.44%', volume: 89500000 },
+'META': { price: 482.19, change: -5.67, changePercent: '-1.16%', volume: 19800000 },
+'AMZN': { price: 178.25, change: 3.42, changePercent: '+1.96%', volume: 42100000 },
+'AMD': { price: 156.78, change: -4.23, changePercent: '-2.63%', volume: 68900000 },
+'INTC': { price: 42.88, change: 0.95, changePercent: '+2.27%', volume: 52300000 },
+'MU': { price: 98.45, change: 5.67, changePercent: '+6.11%', volume: 28700000 }
+};
+
+// 生成AI分析
+function generateAnalysis(symbol, data, lang) {
+const isUp = data.change >= 0;
+const p = data.price;
+
+if (lang === 'zh') {
+return {
+summary: `${symbol}当前处于${isUp?'上涨':'调整'}阶段,技术面${isUp?'强劲':'偏弱'},建议${isUp?'持有并关注回调机会':'等待企稳信号'}`,
+phase: `当前${isUp?'上涨趋势':'调整阶段'},价格${isUp?'突破':'跌破'}关键均线,成交量${data.volume>50000000?'放大':'萎缩'},MACD${isUp?'金叉':'死叉'},RSI${isUp?'70附近超买':'35附近超卖'}`,
+shortTerm: `短期(1-4周):目标$${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}。${isUp?'回调$'+(p*0.97).toFixed(2)+'可加仓30%':'跌破$'+(p*0.93).toFixed(2)+'止损'}。设置${(p*(isUp?0.93:0.88)).toFixed(2)}止损位。建议${isUp?'70%':'30%'}持仓`,
+midTerm: `中期(1-3月):目标$${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}。关注下次财报(预计${isUp?'超预期':'低于预期'})。${isUp?'持有60%核心仓位,40%波段操作':'轻仓20%观望,等待$'+(p*0.85).toFixed(2)+'建仓'}。跟踪财报、竞品、政策变化`,
+longTerm: `长期(3-12月):目标$${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}。${isUp?'行业龙头稳固,技术护城河深,长期确定性高':'短期承压但基本面未变,估值历史低位,长期配置价值'}。核心${isUp?'50%':'20%'},波段20%,现金${isUp?'30%':'60%'}。关注技术革新、市场份额、政策、宏观`,
+buyPoints: [
+`买点1:$${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | 10日均线支撑,RSI50-60,MACD红柱缩短 | 加仓20-30% | 止损$${(p*0.92).toFixed(2)}`,
+`买点2:$${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | 30日均线支撑,超卖,成交量萎缩见底 | 分批30-40% | 止损$${(p*0.85).toFixed(2)}`,
+`买点3:$${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | 估值历史低位,基本面未变,长期逻辑成立 | 3-6月分批50-60% | 长期持有不设止损`
+],
+sellPoints: [
+`卖点1:$${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | 突破前高,RSI>70,MACD背离 | 卖30%锁定利润 | 技术面过热需整理`,
+`卖点2:$${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | 财报后估值修复,情绪高涨 | 卖40%保留核心 | 估值充分反映利好`,
+`卖点3:$${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | 长期目标达成,基本面/技术拐点 | 减至20-30%底仓 | 防范系统性风险`
+],
+supports: [
+`支撑1:$${(p*0.95).toFixed(2)} | 10日均线,前期密集区,0.382回撤 | 强支撑跌破30% | 企稳可加仓`,
+`支撑2:$${(p*0.88).toFixed(2)} | 30日均线,平台底部,0.618回撤 | 强支撑跌破15% | 中期买点`
+],
+resistances: [
+`阻力1:$${(p*1.08).toFixed(2)} | 前高,通道上轨,整数关口 | 中等阻力突破45% | 可追涨`,
+`阻力2:$${(p*1.18).toFixed(2)} | 历史高点,密集区,颈线位 | 强阻力突破25% | 需放量确认`
+],
+risks: [
+`风险1:市场系统性风险 | 美联储加息超预期,流动性收紧,科技股承压 | 概率35% | 影响-10至-15% | 降仓至50%以下,关注议息会议`,
+`风险2:行业竞争加剧 | 新进入者突破或竞品份额扩大,利润率下降 | 概率30% | 影响增速-5至-10% | 关注竞品动态和财报市占率`,
+`风险3:基本面恶化 | 产品研发不及预期或大客户流失,营收下滑 | 概率20% | 影响估值-15至-20% | 跟踪季度业绩和管理层指引`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+} else if (lang === 'es') {
+return {
+summary: `${symbol} en fase de ${isUp?'alza':'corrección'}, técnicos ${isUp?'fuertes':'débiles'}, sugerir ${isUp?'mantener y observar retroceso':'esperar señal de estabilización'}`,
+phase: `${isUp?'Tendencia alcista':'Fase de corrección'}, precio ${isUp?'rompe por encima':'cae por debajo'} de MAs clave, volumen ${data.volume>50000000?'expandiéndose':'contrayéndose'}, MACD ${isUp?'cruce dorado':'cruce de muerte'}, RSI ${isUp?'70 sobrecompra':'35 sobreventa'}`,
+shortTerm: `Corto plazo(1-4sem): Objetivo $${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}. ${isUp?'Agregar 30% en $'+(p*0.97).toFixed(2):'Stop en $'+(p*0.93).toFixed(2)}. Stop en $${(p*(isUp?0.93:0.88)).toFixed(2)}. ${isUp?'70%':'30%'} posición`,
+midTerm: `Medio plazo(1-3m): Objetivo $${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}. Próximas ganancias esperan ${isUp?'superar':'fallar'}. ${isUp?'Mantener 60% núcleo, 40% trading':'Ligero 20%, agregar en $'+(p*0.85).toFixed(2)}. Rastrear ganancias, competidores, política`,
+longTerm: `Largo plazo(3-12m): Objetivo $${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}. ${isUp?'Líder de industria, foso fuerte, alta certeza':'Presión a corto pero fundamentos intactos, valoración baja'}. Núcleo ${isUp?'50%':'20%'}, trading 20%, efectivo ${isUp?'30%':'60%'}. Observar innovación, cuota, política, macro`,
+buyPoints: [
+`Compra1: $${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | MA 10 días, RSI 50-60, MACD rojo acortando | Agregar 20-30% | Stop $${(p*0.92).toFixed(2)}`,
+`Compra2: $${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | MA 30 días, sobreventa, volumen contrayendo | Agregar 30-40% lotes | Stop $${(p*0.85).toFixed(2)}`,
+`Compra3: $${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | Valoración baja, fundamentos intactos, lógica se mantiene | 50-60% en 3-6m | Sin stop mantener largo`
+],
+sellPoints: [
+`Venta1: $${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | Romper máximo, RSI>70, MACD diverge | Vender 30% asegurar ganancia | Técnico sobrecalentado`,
+`Venta2: $${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | Post-ganancias recuperación, sentimiento alto | Vender 40% mantener núcleo | Valoración refleja alza`,
+`Venta3: $${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | Objetivo largo alcanzado, inflexión fundamental/técnica | Reducir a 20-30% | Prevención riesgo sistémico`
+],
+supports: [
+`Soporte1: $${(p*0.95).toFixed(2)} | MA 10 días, área densa, Fib 0.382 | Fuerte romper 30% | Puede agregar`,
+`Soporte2: $${(p*0.88).toFixed(2)} | MA 30 días, fondo plataforma, Fib 0.618 | Fuerte romper 15% | Compra medio`
+],
+resistances: [
+`Resistencia1: $${(p*1.08).toFixed(2)} | Máximo previo, tope canal, número redondo | Medio romper 45% | Puede perseguir`,
+`Resistencia2: $${(p*1.18).toFixed(2)} | Máximo histórico, trading denso, línea cuello | Fuerte romper 25% | Necesita volumen`
+],
+risks: [
+`Riesgo1: Mercado Sistémico | Subidas Fed exceden, liquidez se ajusta, tech bajo presión | Prob 35% | Impacto -10 a -15% | Reducir a <50%, observar Fed`,
+`Riesgo2: Competencia Industria | Nueva entrada avance o competidor gana cuota, margen compresión | Prob 30% | Impacto crecimiento -5 a -10% | Monitorear competidores y cuota mercado`,
+`Riesgo3: Deterioro Fundamental | I+D producto bajo expectativas o pérdida cliente mayor, declive ingresos | Prob 20% | Impacto valoración -15 a -20% | Rastrear resultados trimestrales y guía`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+} else {
+return {
+summary: `${symbol} in ${isUp?'uptrend':'correction'}, technical ${isUp?'strong':'weak'}, suggest ${isUp?'hold watch pullback':'wait for stabilization'}`,
+phase: `${isUp?'Uptrend':'Correction'}, price ${isUp?'breaks above':'falls below'} key MAs, volume ${data.volume>50000000?'expanding':'contracting'}, MACD ${isUp?'golden cross':'death cross'}, RSI ${isUp?'70 overbought':'35 oversold'}`,
+shortTerm: `Short(1-4w): Target $${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}. ${isUp?'Add 30% at $'+(p*0.97).toFixed(2):'Stop at $'+(p*0.93).toFixed(2)}. Set stop $${(p*(isUp?0.93:0.88)).toFixed(2)}. ${isUp?'70%':'30%'} position`,
+midTerm: `Mid(1-3m): Target $${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}. Next earnings expect ${isUp?'beat':'miss'}. ${isUp?'Hold 60% core, 40% trade':'Light 20%, add at $'+(p*0.85).toFixed(2)}. Track earnings, competitors, policy`,
+longTerm: `Long(3-12m): Target $${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}. ${isUp?'Industry leader, strong moat, high certainty':'Short pressure but fundamentals intact, valuation low'}. Core ${isUp?'50%':'20%'}, trade 20%, cash ${isUp?'30%':'60%'}. Watch innovation, share, policy, macro`,
+buyPoints: [
+`Buy1: $${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | 10-day MA, RSI 50-60, MACD red shortening | Add 20-30% | Stop $${(p*0.92).toFixed(2)}`,
+`Buy2: $${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | 30-day MA, oversold, volume contracting | Add 30-40% batches | Stop $${(p*0.85).toFixed(2)}`,
+`Buy3: $${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | Valuation low, fundamentals intact, logic holds | 50-60% over 3-6m | No stop long hold`
+],
+sellPoints: [
+`Sell1: $${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | Break high, RSI>70, MACD diverge | Sell 30% lock profit | Technical overbought`,
+`Sell2: $${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | Post-earnings recovery, sentiment high | Sell 40% keep core | Valuation reflects upside`,
+`Sell3: $${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | Long target reached, fundamental/technical inflection | Reduce to 20-30% | Systemic risk prevention`
+],
+supports: [
+`Support1: $${(p*0.95).toFixed(2)} | 10-day MA, dense area, 0.382 Fib | Strong 30% break | Can add`,
+`Support2: $${(p*0.88).toFixed(2)} | 30-day MA, platform bottom, 0.618 Fib | Strong 15% break | Mid buy`
+],
+resistances: [
+`Resistance1: $${(p*1.08).toFixed(2)} | Previous high, channel top, round number | Medium 45% break | Can chase`,
+`Resistance2: $${(p*1.18).toFixed(2)} | Historical high, dense trading, neckline | Strong 25% break | Need volume`
+],
+risks: [
+`Risk1: Market Systematic | Fed rate hikes exceed, liquidity tightens, tech under pressure | Prob 35% | Impact -10 to -15% | Reduce to <50%, watch Fed`,
+`Risk2: Industry Competition | New entrant breakthrough or competitor gains share, margin compression | Prob 30% | Impact growth -5 to -10% | Monitor competitors and market share`,
+`Risk3: Fundamental Deterioration | Product R&D below expectations or major customer loss, revenue decline | Prob 20% | Impact valuation -15 to -20% | Track quarterly results and guidance`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+}
+}
+
+function analyzeStock() {
+const input = document.getElementById('stockInput');
+const status = document.getElementById('statusText');
+const btn = document.getElementById('analyzeBtn');
+const t = translations[currentLang];
+const symbol = input.value.trim().toUpperCase();
+
+if (!symbol) { 
+status.className = 'text-center text-sm text-red-600 font-semibold';
+status.textContent = '❌ ' + t.enterSymbol;
+return; 
+}
+
+btn.disabled = true;
+status.className = 'text-center text-sm text-purple-600 font-semibold animate-pulse';
+status.textContent = '🤖 ' + t.analyzing;
+
+setTimeout(() => {
+// Show saving message
+status.className = 'text-center text-sm text-blue-600 font-semibold animate-pulse';
+status.textContent = t.saving;
+
+let stockData = stockDatabase[symbol];
+
+if (!stockData) {
+const basePrice = Math.random() * 500 + 50;
+const change = (Math.random() - 0.5) * basePrice * 0.1;
+stockData = {
+price: parseFloat(basePrice.toFixed(2)),
+change: parseFloat(change.toFixed(2)),
+changePercent: (change >= 0 ? '+' : '') + ((change / basePrice) * 100).toFixed(2) + '%',
+volume: Math.floor(Math.random() * 100000000)
+};
+}
+
+const analysis = generateAnalysis(symbol, stockData, currentLang);
+const fullData = { ...stockData, analysis };
+
+const analyses = JSON.parse(localStorage.getItem('stockAnalyses') || '[]');
+analyses.unshift({
+symbol,
+data: fullData,
+timestamp: new Date().toISOString(),
+date: new Date().toLocaleString(currentLang === 'zh' ? 'zh-CN' : currentLang === 'es' ? 'es-ES' : 'en-US')
+});
+if (analyses.length > 50) analyses.length = 50;
+localStorage.setItem('stockAnalyses', JSON.stringify(analyses));
+
+setTimeout(() => {
+status.className = 'text-center text-sm text-green-600 font-bold';
+status.textContent = t.complete;
+input.value = '';
+
+setTimeout(() => {
+status.className = 'text-center text-sm text-gray-600 font-semibold';
+status.textContent = t.redirecting;
+setTimeout(() => {
+window.location.href = `profile.html?symbol=${symbol}`;
+}, 500);
+}, 800);
+}, 600);
+}, 1500);
+}
+
+function loadMacro() {
+const t = translations[currentLang];
+const data = {
+indicators: [
+{ name: 'GDP', cn: 'GDP增长', es: 'Crecimiento PIB', val: 2.8, exp: 2.5, unit: '%', impact: 'bullish' },
+{ name: 'CPI', cn: 'CPI通胀', es: 'Inflación IPC', val: 3.2, exp: 3.5, unit: '%', impact: 'bullish' },
+{ name: 'Core PCE', cn: '核心PCE', es: 'PCE Núcleo', val: 2.9, exp: 3.0, unit: '%', impact: 'bullish' },
+{ name: 'Unemployment', cn: '失业率', es: 'Desempleo', val: 3.8, exp: 3.9, unit: '%', impact: 'bullish' },
+{ name: 'NFP', cn: '非农就业', es: 'Nóminas NFP', val: 185, exp: 175, unit: 'K', impact: 'bullish' },
+{ name: 'Fed Rate', cn: '利率', es: 'Tasa Fed', val: 5.5, exp: 5.5, unit: '%', impact: 'neutral' },
+{ name: 'PMI Mfg', cn: '制造PMI', es: 'PMI Manuf', val: 52.3, exp: 51.5, unit: '', impact: 'bullish' },
+{ name: 'PMI Svc', cn: '服务PMI', es: 'PMI Serv', val: 54.1, exp: 53.5, unit: '', impact: 'bullish' },
+{ name: 'Consumer', cn: '消费信心', es: 'Confianza', val: 108.5, exp: 105.0, unit: '', impact: 'bullish' },
+{ name: 'Retail', cn: '零售', es: 'Ventas', val: 0.6, exp: 0.4, unit: '%', impact: 'bullish' },
+{ name: 'Housing', cn: '新屋', es: 'Vivienda', val: 1.42, exp: 1.38, unit: 'M', impact: 'bullish' },
+{ name: 'Industrial', cn: '工业', es: 'Industrial', val: 0.5, exp: 0.3, unit: '%', impact: 'bullish' },
+{ name: 'Import', cn: '进口', es: 'Import', val: -0.2, exp: 0.1, unit: '%', impact: 'bullish' },
+{ name: 'Export', cn: '出口', es: 'Export', val: 2.3, exp: 1.8, unit: '%', impact: 'bullish' },
+{ name: 'PPI', cn: 'PPI', es: 'IPP', val: 1.8, exp: 2.1, unit: '%', impact: 'bullish' },
+{ name: 'Wages', cn: '时薪', es: 'Salarios', val: 4.2, exp: 4.0, unit: '%', impact: 'neutral' }
+]
+};
+
+document.getElementById('macroGrid').innerHTML = data.indicators.map(i => {
+const border = i.impact === 'bullish' ? 'border-green-500' : i.impact === 'bearish' ? 'border-red-500' : 'border-gray-400';
+const label = currentLang === 'zh' ? i.cn : currentLang === 'es' ? i.es : i.name;
+return `<div class="bg-white/80 rounded-xl p-3 border-l-4 ${border}">
+<div class="text-xs text-gray-500 mb-1">${label}</div>
+<div class="text-lg font-bold">${i.val}${i.unit}</div>
+<div class="text-xs text-gray-400">${t.expected} ${i.exp}${i.unit}</div>
+</div>`;
+}).join('');
+
+document.getElementById('aiSummary').textContent = t.summary;
+}
+
+function loadNews() {
+const news = currentLang === 'zh' ? [
+{ symbol: 'NVDA', title: 'NVIDIA发布Blackwell GPU,AI性能提升4倍', impact: 'bullish' },
+{ symbol: 'MSFT', title: 'Microsoft Azure AI营收增长80%', impact: 'bullish' },
+{ symbol: 'GOOGL', title: 'Google Gemini超越GPT-4', impact: 'bullish' },
+{ symbol: 'TSLA', title: 'Tesla FSD测试里程破10亿英里', impact: 'bullish' },
+{ symbol: 'META', title: 'Meta开源Llama 3模型', impact: 'neutral' }
+] : currentLang === 'es' ? [
+{ symbol: 'NVDA', title: 'NVIDIA Lanza GPU Blackwell, Rendimiento IA 4x', impact: 'bullish' },
+{ symbol: 'MSFT', title: 'Microsoft Azure AI Ingresos Crecen 80%', impact: 'bullish' },
+{ symbol: 'GOOGL', title: 'Google Gemini Supera GPT-4', impact: 'bullish' },
+{ symbol: 'TSLA', title: 'Tesla FSD Alcanza 1 Mil Millones Millas', impact: 'bullish' },
+{ symbol: 'META', title: 'Meta Libera Modelo Llama 3 Código Abierto', impact: 'neutral' }
+] : [
+{ symbol: 'NVDA', title: 'NVIDIA Launches Blackwell GPU, 4x AI Performance', impact: 'bullish' },
+{ symbol: 'MSFT', title: 'Microsoft Azure AI Revenue Grows 80%', impact: 'bullish' },
+{ symbol: 'GOOGL', title: 'Google Gemini Surpasses GPT-4', impact: 'bullish' },
+{ symbol: 'TSLA', title: 'Tesla FSD Reaches 1 Billion Miles', impact: 'bullish' },
+{ symbol: 'META', title: 'Meta Open-Sources Llama 3 Model', impact: 'neutral' }
+];
+
+document.getElementById('newsList').innerHTML = news.map(n => {
+const icon = n.impact === 'bullish' ? '📈' : n.impact === 'bearish' ? '📉' : '➡️';
+const border = n.impact === 'bullish' ? 'border-green-500' : n.impact === 'bearish' ? 'border-red-500' : 'border-gray-400';
+return `<div class="bg-white/80 rounded-xl p-3 border-l-4 ${border}">
+<div class="flex items-start gap-2">
+<span class="text-xl">${icon}</span>
+<div class="flex-1">
+<div class="font-bold text-purple-600 text-sm mb-1">${n.symbol}</div>
+<div class="text-sm text-gray-800">${n.title}</div>
+</div>
+</div>
+</div>`;
+}).join('');
+}
+
+function loadIndustry() {
+const cats = currentLang === 'zh' ? [
+{ name: '📲 AI芯片', items: [
+{ name: 'Blackwell GPU', company: 'NVIDIA', eval: '最新科技 | 供不应求', stocks: ['NVDA', 'TSMC'] },
+{ name: 'Gaudi 3', company: 'Intel', eval: '追赶者 | 价格优势', stocks: ['INTC'] },
+{ name: 'MI300X', company: 'AMD', eval: '强劲竞品 | 市场扩张', stocks: ['AMD'] }
+]},
+{ name: '☁️ 云平台', items: [
+{ name: 'Azure AI', company: 'Microsoft', eval: '收入暴涨 | 企业首选', stocks: ['MSFT'] },
+{ name: 'AWS Bedrock', company: 'Amazon', eval: '云端霸主 | AI整合', stocks: ['AMZN'] },
+{ name: 'Vertex AI', company: 'Google', eval: '技术领先 | 生态完善', stocks: ['GOOGL'] }
+]},
+{ name: '💾 AI存储', items: [
+{ name: 'HBM3E内存', company: 'SK Hynix/Samsung', eval: '供不应求 | 价格翻倍', stocks: ['005930.KS'] },
+{ name: 'SSD存储', company: 'Western Digital', eval: '需求激增 | 产能满载', stocks: ['WDC'] },
+{ name: '存储方案', company: 'Micron', eval: '业绩爆表 | AI驱动', stocks: ['MU'] }
+]},
+{ name: '💼 AI应用', items: [
+{ name: 'Copilot', company: 'Microsoft', eval: '用户暴涨 | 订阅增长', stocks: ['MSFT'] },
+{ name: 'FSD Beta', company: 'Tesla', eval: '技术突破 | 商业化近', stocks: ['TSLA'] },
+{ name: 'ChatGPT Ent', company: 'OpenAI', eval: '企业热捧 | 收入狂飙', stocks: ['MSFT'] }
+]}
+] : currentLang === 'es' ? [
+{ name: '📲 Chips IA', items: [
+{ name: 'Blackwell GPU', company: 'NVIDIA', eval: 'Última Tec | Alta Demanda', stocks: ['NVDA', 'TSMC'] },
+{ name: 'Gaudi 3', company: 'Intel', eval: 'Competidor | Precio Ventaja', stocks: ['INTC'] },
+{ name: 'MI300X', company: 'AMD', eval: 'Producto Fuerte | Creciendo', stocks: ['AMD'] }
+]},
+{ name: '☁️ Nube', items: [
+{ name: 'Azure AI', company: 'Microsoft', eval: 'Ingresos Altos | Empresas', stocks: ['MSFT'] },
+{ name: 'AWS Bedrock', company: 'Amazon', eval: 'Líder Nube | IA Integrada', stocks: ['AMZN'] },
+{ name: 'Vertex AI', company: 'Google', eval: 'Tec Líder | Ecosistema', stocks: ['GOOGL'] }
+]},
+{ name: '💾 Almacenamiento IA', items: [
+{ name: 'Memoria HBM3E', company: 'SK Hynix/Samsung', eval: 'Falta Suministro | Precio Alto', stocks: ['005930.KS'] },
+{ name: 'Almacenamiento SSD', company: 'Western Digital', eval: 'Demanda Alta | Capacidad Llena', stocks: ['WDC'] },
+{ name: 'Solución Almacenamiento', company: 'Micron', eval: 'Ganancias Fuertes | IA Impulsa', stocks: ['MU'] }
+]},
+{ name: '💼 Apps IA', items: [
+{ name: 'Copilot', company: 'Microsoft', eval: 'Usuarios Crecen | Suscripción Alta', stocks: ['MSFT'] },
+{ name: 'FSD Beta', company: 'Tesla', eval: 'Avance Tec | Comercialización', stocks: ['TSLA'] },
+{ name: 'ChatGPT Ent', company: 'OpenAI', eval: 'Empresas Adoptan | Ingresos Altos', stocks: ['MSFT'] }
+]}
+] : [
+{ name: '📲 AI Chips', items: [
+{ name: 'Blackwell GPU', company: 'NVIDIA', eval: 'Latest Tech | High Demand', stocks: ['NVDA', 'TSMC'] },
+{ name: 'Gaudi 3', company: 'Intel', eval: 'Competitive | Price Edge', stocks: ['INTC'] },
+{ name: 'MI300X', company: 'AMD', eval: 'Strong Product | Growing', stocks: ['AMD'] }
+]},
+{ name: '☁️ Cloud', items: [
+{ name: 'Azure AI', company: 'Microsoft', eval: 'Revenue Surge | Enterprise', stocks: ['MSFT'] },
+{ name: 'AWS Bedrock', company: 'Amazon', eval: 'Cloud Leader | AI Integrated', stocks: ['AMZN'] },
+{ name: 'Vertex AI', company: 'Google', eval: 'Tech Leading | Ecosystem', stocks: ['GOOGL'] }
+]},
+{ name: '💾 AI Storage', items: [
+{ name: 'HBM3E Memory', company: 'SK Hynix/Samsung', eval: 'Supply Short | Price Up', stocks: ['005930.KS'] },
+{ name: 'SSD Storage', company: 'Western Digital', eval: 'Demand Surge | Full Capacity', stocks: ['WDC'] },
+{ name: 'Storage Solution', company: 'Micron', eval: 'Strong Earnings | AI Driven', stocks: ['MU'] }
+]},
+{ name: '💼 AI Apps', items: [
+{ name: 'Copilot', company: 'Microsoft', eval: 'User Growth | Subscription Up', stocks: ['MSFT'] },
+{ name: 'FSD Beta', company: 'Tesla', eval: 'Tech Breakthrough | Commercial', stocks: ['TSLA'] },
+{ name: 'ChatGPT Ent', company: 'OpenAI', eval: 'Enterprise Hot | Revenue Surge', stocks: ['MSFT'] }
+]}
+];
+
+document.getElementById('industryList').innerHTML = cats.map(c => `
+<div class="bg-white/80 rounded-xl p-4">
+<div class="font-bold text-purple-600 mb-3 text-sm">${c.name}</div>
+<div class="space-y-3">
+${c.items.map(i => `<div class="bg-gray-50 rounded-lg p-3 border-l-4 border-purple-400">
+<div class="flex justify-between items-start mb-2">
+<div class="flex-1">
+<div class="font-semibold text-sm text-gray-800">${i.name}</div>
+<div class="text-xs text-gray-500">${i.company}</div>
+</div>
+<div class="flex gap-1 flex-wrap justify-end">
+${i.stocks.map(s => `<span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-bold rounded">${s}</span>`).join('')}
+</div>
+</div>
+<div class="text-xs text-purple-700 font-semibold bg-purple-50 px-2 py-1 rounded">${i.eval}</div>
+</div>`).join('')}
+</div>
+</div>
+`).join('');
+}
+
+function loadCrashes() {
+const crashes = currentLang === 'zh' ? [
+{ 
+symbol: 'NVDA', 
+title: 'NVIDIA暴跌12%',
+reason: '核心原因:DeepSeek发布开源AI模型,成本仅1/30,市场担忧GPU需求下降',
+opportunity: '机会:技术护城河依然存在,可在$110-120逢低布局'
+},
+{ 
+symbol: 'MSFT', 
+title: 'Microsoft下跌8%',
+reason: '核心原因:OpenAI成本压力传导,Azure增长放缓预期',
+opportunity: '机会:云业务基本面稳健,$400以下可分批建仓'
+},
+{ 
+symbol: 'GOOGL', 
+title: 'Google跌7%',
+reason: '核心原因:Gemini竞争力被质疑,广告收入增长担忧',
+opportunity: '机会:估值修复空间大,$140-150是较好入场点'
+}
+] : currentLang === 'es' ? [
+{ 
+symbol: 'NVDA', 
+title: 'NVIDIA Cae 12%',
+reason: 'Razón Central: DeepSeek lanza modelo IA código abierto a costo 1/30, preocupación demanda GPU',
+opportunity: 'Oportunidad: Foso tecnológico permanece, comprar en $110-120'
+},
+{ 
+symbol: 'MSFT', 
+title: 'Microsoft Baja 8%',
+reason: 'Razón Central: Presión costos OpenAI, expectativa desaceleración Azure',
+opportunity: 'Oportunidad: Fundamentos nube sólidos, comprar bajo $400'
+},
+{ 
+symbol: 'GOOGL', 
+title: 'Google Baja 7%',
+reason: 'Razón Central: Competitividad Gemini cuestionada, preocupación ingresos publicidad',
+opportunity: 'Oportunidad: Espacio recuperación valoración, buena entrada $140-150'
+}
+] : [
+{ 
+symbol: 'NVDA', 
+title: 'NVIDIA Crashes 12%',
+reason: 'Core Reason: DeepSeek open-source AI model at 1/30 cost, GPU demand concerns',
+opportunity: 'Opportunity: Tech moat remains, buy at $110-120'
+},
+{ 
+symbol: 'MSFT', 
+title: 'Microsoft Down 8%',
+reason: 'Core Reason: OpenAI cost pressure, Azure growth slowdown expected',
+opportunity: 'Opportunity: Cloud fundamentals strong, buy below $400'
+},
+{ 
+symbol: 'GOOGL', 
+title: 'Google Down 7%',
+reason: 'Core Reason: Gemini competitiveness questioned, ad revenue concerns',
+opportunity: 'Opportunity: Valuation recovery space, good entry at $140-150'
+}
+];
+
+document.getElementById('crashList').innerHTML = crashes.map(c => {
+return `<div class="bg-red-50 rounded-xl p-4 border-l-4 border-red-500">
+<div class="flex items-start gap-2 mb-3">
+<span class="text-2xl">📉</span>
+<div class="flex-1">
+<div class="font-bold text-red-600 text-sm mb-1">${c.symbol}</div>
+<div class="font-semibold text-base text-gray-800 mb-2">${c.title}</div>
+</div>
+</div>
+<div class="bg-white rounded-lg p-3 mb-2">
+<div class="text-xs font-bold text-red-700 mb-1">${currentLang === 'zh' ? '● 核心原因' : currentLang === 'es' ? '● Razón Central' : '● Core Reason'}</div>
+<div class="text-sm text-gray-700">${c.reason}</div>
+</div>
+<div class="bg-green-50 rounded-lg p-3">
+<div class="text-xs font-bold text-green-700 mb-1">${currentLang === 'zh' ? '💡 是否机会' : currentLang === 'es' ? '💡 Oportunidad' : '💡 Opportunity'}</div>
+<div class="text-sm text-gray-700">${c.opportunity}</div>
+</div>
+</div>`;
+}).join('');
+}
+
+document.getElementById('stockInput').addEventListener('keypress', e => {
+if (e.key === 'Enter') analyzeStock();
+});
+
+applyLanguage();
+loadMacro();
+loadNews();
+loadIndustry();
+loadCrashes();
+
+window.stockDatabase = stockDatabase;
+window.generateAnalysis = generateAnalysis;
+</script>
+
+</body>
+</html>

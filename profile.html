@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人中心</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { font-family: 'Inter', sans-serif; }
+body { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); min-height: 100vh; padding-bottom: 80px; }
+.glass { background: rgba(102, 126, 234, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+.glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); }
+.modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 9999; overflow-y: auto; padding: 20px; }
+.modal.show { display: block; }
+.nav-glass { background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(20px); border-top: 2px solid rgba(255, 255, 255, 0.5); }
+</style>
+</head>
+<body>
+
+<div class="glass sticky top-0 z-50">
+<div class="max-w-md mx-auto px-4 py-6">
+<div class="flex flex-col items-center gap-4">
+<div class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-5xl">👤</div>
+<div class="text-center">
+<h1 class="text-xl font-bold text-white mb-1" id="username">投资者</h1>
+<p class="text-xs text-white/80 bg-white/20 px-3 py-1 rounded-full">ID: AI_2026</p>
+</div>
+</div>
+</div>
+</div>
+
+<div class="max-w-md mx-auto px-4 py-4 space-y-4">
+
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<h2 class="text-base font-bold mb-3 flex items-center gap-2">
+<span>🌐</span><span id="langTitle">语言设置</span>
+</h2>
+<div class="grid grid-cols-3 gap-3">
+<button onclick="setLanguage('zh')" id="btnZh" class="py-3 rounded-xl font-bold transition-all">中文</button>
+<button onclick="setLanguage('en')" id="btnEn" class="py-3 rounded-xl font-bold transition-all">English</button>
+<button onclick="setLanguage('es')" id="btnEs" class="py-3 rounded-xl font-bold transition-all">Español</button>
+</div>
+</div>
+
+<div class="glass-card rounded-3xl p-5 shadow-xl">
+<div class="flex justify-between items-center mb-3">
+<h2 class="text-base font-bold flex items-center gap-2">
+<span>📊</span><span id="historyTitle">历史报告</span>
+</h2>
+<button onclick="loadHistory()" class="text-purple-600 text-xs font-semibold bg-purple-50 px-3 py-1 rounded-lg" id="refreshBtn">刷新</button>
+</div>
+<div id="historyList" class="space-y-3"></div>
+</div>
+
+</div>
+
+<div id="modal" class="modal">
+<div class="max-w-2xl mx-auto">
+<div class="glass-card rounded-3xl p-6 mb-4">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-2xl font-bold text-purple-600" id="modalTitle">完整交易决策报告</h3>
+<button onclick="closeModal()" class="text-white bg-red-600 rounded-full w-10 h-10 flex items-center justify-center font-bold text-xl hover:bg-red-700 transition-all">✕</button>
+</div>
+<div id="modalBody"></div>
+</div>
+</div>
+</div>
+
+<div class="fixed bottom-0 left-0 right-0 nav-glass z-50">
+<div class="max-w-md mx-auto flex justify-around py-3">
+<a href="index.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navHome">首页</span>
+</a>
+<a href="portfolio.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+<span class="text-xs font-bold text-white opacity-70" id="navAisight">投资组合</span>
+</a>
+<a href="profile.html" class="flex flex-col items-center gap-1 py-2 px-4">
+<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+<span class="text-xs font-bold text-white" id="navProfile">个人中心</span>
+</a>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/he/1.2.0/he.min.js"></script>
+<script>
+let currentLang = localStorage.getItem('language') || 'zh';
+
+const translations = {
+zh: { username: '投资者', langTitle: '语言设置', historyTitle: '历史报告', refreshBtn: '刷新', navHome: '首页', navAisight: '投资组合', navProfile: '个人中心', noHistory: '暂无分析记录', noHistoryDesc: '前往首页开始分析', modalTitle: '完整交易决策报告', holding: '持仓信息', noHolding: '未持仓', cost: '成本', shares: '持股', currentPrice: '当前价', marketValue: '市值', pnl: '盈亏', summary: '一句话总结', phase: '当前阶段', shortTerm: '短期建议', midTerm: '中期建议', longTerm: '长期建议', keyLevels: '关键价位', support: '支撑位', resistance: '阻力位', buyPoints: '买入节点建议', sellPoints: '卖出时间节点建议', risks: '核心风险', expectedGains: '预期涨跌幅', short: '短期', mid: '中期', long: '长期', analysisTime: '分析时间', langChanged: '语言已切换', viewReport: '在线查看', downloadReport: '下载报告' },
+en: { username: 'Investor', langTitle: 'Language', historyTitle: 'History', refreshBtn: 'Refresh', navHome: 'Home', navAisight: 'Portfolio', navProfile: 'Profile', noHistory: 'No records', noHistoryDesc: 'Go to Home to start', modalTitle: 'Complete Trading Decision Report', holding: 'Holdings', noHolding: 'No Holdings', cost: 'Cost', shares: 'Shares', currentPrice: 'Current Price', marketValue: 'Market Value', pnl: 'P&L', summary: 'Summary', phase: 'Current Phase', shortTerm: 'Short-Term', midTerm: 'Mid-Term', longTerm: 'Long-Term', keyLevels: 'Key Levels', support: 'Support', resistance: 'Resistance', buyPoints: 'Buy Points', sellPoints: 'Sell Points', risks: 'Core Risks', expectedGains: 'Expected Gains', short: 'Short', mid: 'Mid', long: 'Long', analysisTime: 'Analysis Time', langChanged: 'Language changed', viewReport: 'View Report', downloadReport: 'Download Report' },
+es: { username: 'Inversor', langTitle: 'Idioma', historyTitle: 'Historial', refreshBtn: 'Actualizar', navHome: 'Inicio', navAisight: 'Portafolio', navProfile: 'Perfil', noHistory: 'Sin registros', noHistoryDesc: 'Ir a Inicio para empezar', modalTitle: 'Informe Completo', holding: 'Posiciones', noHolding: 'Sin Posiciones', cost: 'Costo', shares: 'Acciones', currentPrice: 'Precio Actual', marketValue: 'Valor', pnl: 'G/P', summary: 'Resumen', phase: 'Fase Actual', shortTerm: 'Corto Plazo', midTerm: 'Medio Plazo', longTerm: 'Largo Plazo', keyLevels: 'Niveles Clave', support: 'Soporte', resistance: 'Resistencia', buyPoints: 'Puntos Compra', sellPoints: 'Puntos Venta', risks: 'Riesgos', expectedGains: 'Ganancias Esperadas', short: 'Corto', mid: 'Medio', long: 'Largo', analysisTime: 'Tiempo Análisis', langChanged: 'Idioma cambiado', viewReport: 'Ver Informe', downloadReport: 'Descargar' }
+};
+
+function applyLanguage() {
+const t = translations[currentLang];
+document.getElementById('username').textContent = t.username;
+document.getElementById('langTitle').textContent = t.langTitle;
+document.getElementById('historyTitle').textContent = t.historyTitle;
+document.getElementById('refreshBtn').textContent = t.refreshBtn;
+document.getElementById('navHome').textContent = t.navHome;
+document.getElementById('navAisight').textContent = t.navAisight;
+document.getElementById('navProfile').textContent = t.navProfile;
+
+['zh','en','es'].forEach(lang => {
+const btn = document.getElementById('btn' + lang.charAt(0).toUpperCase() + lang.slice(1));
+btn.className = lang === currentLang 
+? 'py-3 rounded-xl font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+: 'py-3 rounded-xl font-bold transition-all bg-gray-200 text-gray-600';
+});
+}
+
+function setLanguage(lang) {
+currentLang = lang;
+localStorage.setItem('language', lang);
+applyLanguage();
+loadHistory();
+}
+
+function loadHistory() {
+const t = translations[currentLang];
+const analyses = JSON.parse(localStorage.getItem('stockAnalyses') || '[]');
+const list = document.getElementById('historyList');
+
+console.log('Loading history, found', analyses.length, 'analyses');
+
+if (analyses.length === 0) {
+list.innerHTML = `<div class="text-center py-8 text-gray-400">
+<div class="text-4xl mb-2">📊</div>
+<div class="text-sm">${t.noHistory}</div>
+<div class="text-xs mt-2">${t.noHistoryDesc}</div>
+</div>`;
+return;
+}
+
+list.innerHTML = analyses.slice(0, 20).map((item, idx) => {
+const d = item.data || {};
+const isUp = (d.change || 0) >= 0;
+const border = isUp ? 'border-green-500' : 'border-red-500';
+const textColor = isUp ? 'text-green-600' : 'text-red-600';
+
+return `
+<div class="bg-white/90 rounded-2xl p-4 border-l-4 ${border}">
+<div class="flex justify-between items-center mb-2">
+<div class="font-bold text-lg text-purple-600">${item.symbol}</div>
+<div class="text-xs text-gray-500">${item.date.split(' ')[0]}</div>
+</div>
+<div class="flex justify-between items-center mb-3">
+<div class="text-2xl font-bold">$${d.price ? d.price.toFixed(2) : 'N/A'}</div>
+<div class="${textColor} font-bold">${isUp ? '+' : ''}${d.changePercent || 'N/A'}</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="viewDetail(${idx})" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2 px-4 rounded-xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+${t.viewReport}
+</button>
+<button onclick="downloadReport(${idx})" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+${t.downloadReport}
+</button>
+</div>
+</div>
+`;
+}).join('');
+}
+
+// 生成AI分析 - 根据当前语言动态生成
+function generateAnalysis(symbol, data, lang) {
+const isUp = data.change >= 0;
+const p = data.price;
+
+if (lang === 'zh') {
+return {
+summary: `${symbol}当前处于${isUp?'上涨':'调整'}阶段，技术面${isUp?'强劲':'偏弱'}，建议${isUp?'持有并关注回调机会':'等待企稳信号'}`,
+phase: `当前${isUp?'上涨趋势':'调整阶段'}，价格${isUp?'突破':'跌破'}关键均线，成交量${data.volume>50000000?'放大':'萎缩'}，MACD${isUp?'金叉':'死叉'}，RSI${isUp?'70附近超买':'35附近超卖'}`,
+shortTerm: `短期(1-4周)：目标$${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}。${isUp?'回调$'+(p*0.97).toFixed(2)+'可加仓30%':'跌破$'+(p*0.93).toFixed(2)+'止损'}。设置${(p*(isUp?0.93:0.88)).toFixed(2)}止损位。建议${isUp?'70%':'30%'}持仓`,
+midTerm: `中期(1-3月)：目标$${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}。关注下次财报(预计${isUp?'超预期':'低于预期'})。${isUp?'持有60%核心仓位，40%波段操作':'轻仓20%观望，等待$'+(p*0.85).toFixed(2)+'建仓'}。跟踪财报、竞品、政策变化`,
+longTerm: `长期(3-12月)：目标$${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}。${isUp?'行业龙头稳固，技术护城河深，长期确定性高':'短期承压但基本面未变，估值历史低位，长期配置价值'}。核心${isUp?'50%':'20%'}，波段20%，现金${isUp?'30%':'60%'}。关注技术革新、市场份额、政策、宏观`,
+buyPoints: [
+`买点1：$${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | 10日均线支撑，RSI50-60，MACD红柱缩短 | 加仓20-30% | 止损$${(p*0.92).toFixed(2)}`,
+`买点2：$${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | 30日均线支撑，超卖，成交量萎缩见底 | 分批30-40% | 止损$${(p*0.85).toFixed(2)}`,
+`买点3：$${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | 估值历史低位，基本面未变，长期逻辑成立 | 3-6月分批50-60% | 长期持有不设止损`
+],
+sellPoints: [
+`卖点1：$${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | 突破前高，RSI>70，MACD背离 | 卖30%锁定利润 | 技术面过热需整理`,
+`卖点2：$${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | 财报后估值修复，情绪高涨 | 卖40%保留核心 | 估值充分反映利好`,
+`卖点3：$${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | 长期目标达成，基本面/技术拐点 | 减至20-30%底仓 | 防范系统性风险`
+],
+supports: [
+`支撑1：$${(p*0.95).toFixed(2)} | 10日均线，前期密集区，0.382回撤 | 强支撑跌破30% | 企稳可加仓`,
+`支撑2：$${(p*0.88).toFixed(2)} | 30日均线，平台底部，0.618回撤 | 强支撑跌破15% | 中期买点`
+],
+resistances: [
+`阻力1：$${(p*1.08).toFixed(2)} | 前高，通道上轨，整数关口 | 中等阻力突破45% | 可追涨`,
+`阻力2：$${(p*1.18).toFixed(2)} | 历史高点，密集区，颈线位 | 强阻力突破25% | 需放量确认`
+],
+risks: [
+`风险1：市场系统性风险 | 美联储加息超预期，流动性收紧，科技股承压 | 概率35% | 影响-10至-15% | 降仓至50%以下，关注议息会议`,
+`风险2：行业竞争加剧 | 新进入者突破或竞品份额扩大，利润率下降 | 概率30% | 影响增速-5至-10% | 关注竞品动态和财报市占率`,
+`风险3：基本面恶化 | 产品研发不及预期或大客户流失，营收下滑 | 概率20% | 影响估值-15至-20% | 跟踪季度业绩和管理层指引`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+} else if (lang === 'es') {
+return {
+summary: `${symbol} en fase de ${isUp?'subida':'ajuste'}, técnicos ${isUp?'fuertes':'débiles'}, se recomienda ${isUp?'mantener y observar retroceso':'esperar señal de estabilización'}`,
+phase: `${isUp?'Tendencia alcista':'Fase de ajuste'}, precio ${isUp?'rompe':'cae'} MA clave, volumen ${data.volume>50000000?'expandiendo':'contrayendo'}, MACD ${isUp?'cruce dorado':'cruce mortal'}, RSI ${isUp?'70 sobrecompra':'35 sobreventa'}`,
+shortTerm: `Corto(1-4sem): Objetivo $${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}. ${isUp?'Añadir 30% en $'+(p*0.97).toFixed(2):'Stop en $'+(p*0.93).toFixed(2)}. Stop $${(p*(isUp?0.93:0.88)).toFixed(2)}. Posición ${isUp?'70%':'30%'}`,
+midTerm: `Medio(1-3m): Objetivo $${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}. Próximos resultados ${isUp?'superarán':'no alcanzarán'}. ${isUp?'Mantener 60% núcleo, 40% trading':'Ligero 20%, añadir en $'+(p*0.85).toFixed(2)}. Seguir resultados, competencia, política`,
+longTerm: `Largo(3-12m): Objetivo $${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}. ${isUp?'Líder industria, foso fuerte, alta certeza':'Presión corta pero fundamentales intactos, valoración baja'}. Núcleo ${isUp?'50%':'20%'}, trading 20%, efectivo ${isUp?'30%':'60%'}. Observar innovación, cuota, política, macro`,
+buyPoints: [
+`Compra1: $${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | MA 10 días, RSI 50-60, MACD rojo acortando | Añadir 20-30% | Stop $${(p*0.92).toFixed(2)}`,
+`Compra2: $${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | MA 30 días, sobreventa, volumen contrayendo | Añadir 30-40% por lotes | Stop $${(p*0.85).toFixed(2)}`,
+`Compra3: $${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | Valoración baja, fundamentales intactos, lógica mantiene | 50-60% en 3-6m | Mantener largo sin stop`
+],
+sellPoints: [
+`Venta1: $${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | Romper máximo, RSI>70, MACD diverge | Vender 30% asegurar beneficio | Técnico sobrecalentado`,
+`Venta2: $${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | Post-resultados recuperación, sentimiento alto | Vender 40% mantener núcleo | Valoración refleja alza`,
+`Venta3: $${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | Objetivo largo alcanzado, punto inflexión fundamental/técnico | Reducir a 20-30% | Prevención riesgo sistémico`
+],
+supports: [
+`Soporte1: $${(p*0.95).toFixed(2)} | MA 10 días, área densa, Fib 0.382 | Fuerte 30% romper | Puede añadir`,
+`Soporte2: $${(p*0.88).toFixed(2)} | MA 30 días, base plataforma, Fib 0.618 | Fuerte 15% romper | Compra media`
+],
+resistances: [
+`Resistencia1: $${(p*1.08).toFixed(2)} | Máximo previo, canal superior, número redondo | Media 45% romper | Puede perseguir`,
+`Resistencia2: $${(p*1.18).toFixed(2)} | Máximo histórico, trading denso, línea cuello | Fuerte 25% romper | Necesita volumen`
+],
+risks: [
+`Riesgo1: Riesgo Sistémico Mercado | Subidas Fed exceden, liquidez se ajusta, tech bajo presión | Prob 35% | Impacto -10 a -15% | Reducir a <50%, observar Fed`,
+`Riesgo2: Competencia Industria | Nuevo participante irrumpe o competidor gana cuota, compresión margen | Prob 30% | Impacto crecimiento -5 a -10% | Monitorear competidores y cuota mercado`,
+`Riesgo3: Deterioro Fundamental | I+D producto bajo expectativas o pérdida cliente importante, caída ingresos | Prob 20% | Impacto valoración -15 a -20% | Seguir resultados trimestrales y guía`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+} else {
+return {
+summary: `${symbol} in ${isUp?'uptrend':'correction'}, technical ${isUp?'strong':'weak'}, suggest ${isUp?'hold watch pullback':'wait for stabilization'}`,
+phase: `${isUp?'Uptrend':'Correction'}, price ${isUp?'breaks above':'falls below'} key MAs, volume ${data.volume>50000000?'expanding':'contracting'}, MACD ${isUp?'golden cross':'death cross'}, RSI ${isUp?'70 overbought':'35 oversold'}`,
+shortTerm: `Short(1-4w): Target $${(p*(isUp?1.08:0.95)).toFixed(2)}-$${(p*(isUp?1.12:0.98)).toFixed(2)}. ${isUp?'Add 30% at $'+(p*0.97).toFixed(2):'Stop at $'+(p*0.93).toFixed(2)}. Set stop $${(p*(isUp?0.93:0.88)).toFixed(2)}. ${isUp?'70%':'30%'} position`,
+midTerm: `Mid(1-3m): Target $${(p*(isUp?1.18:0.88)).toFixed(2)}-$${(p*(isUp?1.25:0.92)).toFixed(2)}. Next earnings expect ${isUp?'beat':'miss'}. ${isUp?'Hold 60% core, 40% trade':'Light 20%, add at $'+(p*0.85).toFixed(2)}. Track earnings, competitors, policy`,
+longTerm: `Long(3-12m): Target $${(p*(isUp?1.35:0.75)).toFixed(2)}-$${(p*(isUp?1.50:0.85)).toFixed(2)}. ${isUp?'Industry leader, strong moat, high certainty':'Short pressure but fundamentals intact, valuation low'}. Core ${isUp?'50%':'20%'}, trade 20%, cash ${isUp?'30%':'60%'}. Watch innovation, share, policy, macro`,
+buyPoints: [
+`Buy1: $${(p*0.95).toFixed(2)}-$${(p*0.97).toFixed(2)} | 10-day MA, RSI 50-60, MACD red shortening | Add 20-30% | Stop $${(p*0.92).toFixed(2)}`,
+`Buy2: $${(p*0.88).toFixed(2)}-$${(p*0.92).toFixed(2)} | 30-day MA, oversold, volume contracting | Add 30-40% batches | Stop $${(p*0.85).toFixed(2)}`,
+`Buy3: $${(p*0.75).toFixed(2)}-$${(p*0.82).toFixed(2)} | Valuation low, fundamentals intact, logic holds | 50-60% over 3-6m | No stop long hold`
+],
+sellPoints: [
+`Sell1: $${(p*1.08).toFixed(2)}-$${(p*1.12).toFixed(2)} | Break high, RSI>70, MACD diverge | Sell 30% lock profit | Technical overbought`,
+`Sell2: $${(p*1.20).toFixed(2)}-$${(p*1.28).toFixed(2)} | Post-earnings recovery, sentiment high | Sell 40% keep core | Valuation reflects upside`,
+`Sell3: $${(p*1.40).toFixed(2)}-$${(p*1.55).toFixed(2)} | Long target reached, fundamental/technical inflection | Reduce to 20-30% | Systemic risk prevention`
+],
+supports: [
+`Support1: $${(p*0.95).toFixed(2)} | 10-day MA, dense area, 0.382 Fib | Strong 30% break | Can add`,
+`Support2: $${(p*0.88).toFixed(2)} | 30-day MA, platform bottom, 0.618 Fib | Strong 15% break | Mid buy`
+],
+resistances: [
+`Resistance1: $${(p*1.08).toFixed(2)} | Previous high, channel top, round number | Medium 45% break | Can chase`,
+`Resistance2: $${(p*1.18).toFixed(2)} | Historical high, dense trading, neckline | Strong 25% break | Need volume`
+],
+risks: [
+`Risk1: Market Systematic | Fed rate hikes exceed, liquidity tightens, tech under pressure | Prob 35% | Impact -10 to -15% | Reduce to <50%, watch Fed`,
+`Risk2: Industry Competition | New entrant breakthrough or competitor gains share, margin compression | Prob 30% | Impact growth -5 to -10% | Monitor competitors and market share`,
+`Risk3: Fundamental Deterioration | Product R&D below expectations or major customer loss, revenue decline | Prob 20% | Impact valuation -15 to -20% | Track quarterly results and guidance`
+],
+expectedGains: { short: isUp?'+8%':'-5%', mid: isUp?'+18%':'+8%', long: isUp?'+35%':'+25%' }
+};
+}
+}
+
+function viewDetail(idx) {
+const t = translations[currentLang];
+const analyses = JSON.parse(localStorage.getItem('stockAnalyses') || '[]');
+const item = analyses[idx];
+if (!item) return;
+
+const d = item.data || {};
+// 重新生成分析内容，使用当前语言
+const a = generateAnalysis(item.symbol, d, currentLang);
+const holdings = JSON.parse(localStorage.getItem('stockHoldings') || '{}');
+const holding = holdings[item.symbol];
+const p = d.price || 0;
+const isUp = (d.change || 0) >= 0;
+
+// Build holding info HTML
+let holdingHtml = '';
+if (holding) {
+const pnl = ((p - holding.cost) / holding.cost * 100);
+const pnlAmount = (p - holding.cost) * holding.shares;
+const pnlClass = pnl >= 0 ? 'profit' : 'loss';
+const pnlSign = pnl >= 0 ? '+' : '';
+const totalCost = holding.cost * holding.shares;
+
+holdingHtml = `
+<div style="background:#f0f9ff;border-left:4px solid #3b82f6;padding:15px;margin:15px 0;border-radius:8px">
+💼 ${t.holding}: ${t.cost}$${holding.cost} | ${t.shares}${holding.shares}股 | <span class="${pnlClass}">${pnlSign}${pnl.toFixed(2)}% ($${pnlSign}${pnlAmount.toFixed(0)})</span>
+</div>
+`;
+}
+
+// Build support/resistance levels
+let levelsHtml = '';
+if ((a.supports && a.supports.length > 0) || (a.resistances && a.resistances.length > 0)) {
+levelsHtml = `
+<div style="margin:20px 0">
+<h3 style="color:#667eea;font-size:18px;margin-bottom:15px">📍 ${t.keyLevels}</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+${(a.supports || []).map((s, i) => `
+<div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #10b981">
+<div style="font-size:12px;font-weight:600;color:#666;margin-bottom:5px">${t.support} ${i+1}</div>
+<div style="font-size:14px;color:#1a1a1a;white-space:pre-line">${s}</div>
+</div>
+`).join('')}
+${(a.resistances || []).map((r, i) => `
+<div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #ef4444">
+<div style="font-size:12px;font-weight:600;color:#666;margin-bottom:5px">${t.resistance} ${i+1}</div>
+<div style="font-size:14px;color:#1a1a1a;white-space:pre-line">${r}</div>
+</div>
+`).join('')}
+</div>
+</div>
+`;
+}
+
+// Build buy plan
+let buyPlanHtml = '';
+if (a.buyPoints && a.buyPoints.length > 0) {
+buyPlanHtml = `
+<div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);padding:25px;border-radius:15px;margin:20px 0">
+<h3 style="color:#fff;font-size:20px;margin-bottom:20px;text-align:center">🎯 ${t.buyPoints}</h3>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px">
+${a.buyPoints.slice(0, 3).map((bp, i) => {
+const label = currentLang === 'zh' ? ['短期机会(1周)', '中期机会(1月)', '波段策略'][i] :
+currentLang === 'es' ? ['Oportunidad Corta(1sem)', 'Oportunidad Media(1m)', 'Estrategia'][i] :
+['Short Opportunity(1w)', 'Mid Opportunity(1m)', 'Swing Strategy'][i];
+return `
+<div style="background:#fff;padding:15px;border-radius:10px">
+<div style="font-size:14px;font-weight:700;color:#10b981;margin-bottom:8px">${label}</div>
+<div style="font-size:14px;color:#333;line-height:1.5;white-space:pre-line">${bp}</div>
+</div>
+`;
+}).join('')}
+</div>
+</div>
+`;
+}
+
+// Build sell plan
+let sellPlanHtml = '';
+if (a.sellPoints && a.sellPoints.length > 0) {
+sellPlanHtml = `
+<div style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);padding:25px;border-radius:15px;margin:20px 0">
+<h3 style="color:#fff;font-size:20px;margin-bottom:20px;text-align:center">🔤 ${t.sellPoints}</h3>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px">
+${a.sellPoints.slice(0, 3).map((sp, i) => {
+const timeLabel = currentLang === 'zh' ? ['短期(1-4周)', '中期(1-3月)', '长期(3-12月)'][i] :
+currentLang === 'es' ? ['Corto(1-4sem)', 'Medio(1-3m)', 'Largo(3-12m)'][i] :
+['Short(1-4w)', 'Mid(1-3m)', 'Long(3-12m)'][i];
+return `
+<div style="background:#fff;padding:15px;border-radius:10px">
+<div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:5px">${timeLabel}</div>
+<div style="font-size:14px;color:#333;line-height:1.4;white-space:pre-line">${sp}</div>
+</div>
+`;
+}).join('')}
+</div>
+</div>
+`;
+}
+
+// Build additional sections
+let sectionsHtml = '';
+if (a.phase) {
+sectionsHtml += `<div style="margin:15px 0;padding:12px;background:#f8f9fa;border-radius:8px"><strong style="color:#667eea">📈 ${t.phase}:</strong> ${a.phase}</div>`;
+}
+if (a.shortTerm) {
+sectionsHtml += `<div style="margin:15px 0;padding:12px;background:#f8f9fa;border-radius:8px"><strong style="color:#667eea">📊 ${t.shortTerm}:</strong> ${a.shortTerm}</div>`;
+}
+if (a.midTerm) {
+sectionsHtml += `<div style="margin:15px 0;padding:12px;background:#f8f9fa;border-radius:8px"><strong style="color:#667eea">📅 ${t.midTerm}:</strong> ${a.midTerm}</div>`;
+}
+if (a.longTerm) {
+sectionsHtml += `<div style="margin:15px 0;padding:12px;background:#f8f9fa;border-radius:8px"><strong style="color:#667eea">🚀 ${t.longTerm}:</strong> ${a.longTerm}</div>`;
+}
+
+// Build risks
+let risksHtml = '';
+if (a.risks && a.risks.length > 0) {
+risksHtml = a.risks.map(risk => `
+<div style="background:#fef2f2;border-left:4px solid #ef4444;padding:15px;border-radius:8px;margin:15px 0">
+<strong>⚠️ ${currentLang === 'zh' ? '核心风险' : currentLang === 'es' ? 'Riesgo Principal' : 'Core Risk'}:</strong> ${risk}
+</div>
+`).join('');
+}
+
+// Build expected gains
+let expectedGainsHtml = '';
+if (a.expectedGains) {
+const gainsLabel = currentLang === 'zh' ? '预期涨幅' : currentLang === 'es' ? 'Ganancias Esperadas' : 'Expected Gains';
+const shortLabel = currentLang === 'zh' ? '短期' : currentLang === 'es' ? 'Corto' : 'Short';
+const midLabel = currentLang === 'zh' ? '中期' : currentLang === 'es' ? 'Medio' : 'Mid';
+const longLabel = currentLang === 'zh' ? '长期' : currentLang === 'es' ? 'Largo' : 'Long';
+expectedGainsHtml = `
+<div style="background:#e8f5e9;border-left:4px solid #10b981;padding:15px;border-radius:8px;margin:15px 0">
+<strong>📈 ${gainsLabel}:</strong> ${shortLabel}: ${a.expectedGains.short}, ${midLabel}: ${a.expectedGains.mid}, ${longLabel}: ${a.expectedGains.long}
+</div>
+`;
+}
+
+// Build action recommendations
+let actionsHtml = '';
+if (a.expectedGains) {
+const aggressiveLabel = currentLang === 'zh' ? '激进型' : currentLang === 'es' ? 'Agresivo' : 'Aggressive';
+const neutralLabel = currentLang === 'zh' ? '中性型' : currentLang === 'es' ? 'Neutral' : 'Neutral';
+const conservativeLabel = currentLang === 'zh' ? '保守型' : currentLang === 'es' ? 'Conservador' : 'Conservative';
+const holdLabel = currentLang === 'zh' ? '持有待涨' : currentLang === 'es' ? 'Mantener' : 'Hold';
+const partialSellLabel = currentLang === 'zh' ? '部分减仓30%' : currentLang === 'es' ? 'Vender 30%' : 'Sell 30%';
+const majorSellLabel = currentLang === 'zh' ? '减仓50%锁定利润' : currentLang === 'es' ? 'Vender 50%' : 'Sell 50%';
+
+actionsHtml = `
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0">
+<div style="background:#667eea;color:#fff;padding:15px;border-radius:12px;text-align:center">
+<div style="font-size:12px;opacity:0.9;margin-bottom:5px">${aggressiveLabel}</div>
+<div style="font-size:16px;font-weight:bold">${holdLabel}</div>
+</div>
+<div style="background:#f59e0b;color:#fff;padding:15px;border-radius:12px;text-align:center">
+<div style="font-size:12px;opacity:0.9;margin-bottom:5px">${neutralLabel}</div>
+<div style="font-size:16px;font-weight:bold">${partialSellLabel}</div>
+</div>
+<div style="background:#10b981;color:#fff;padding:15px;border-radius:12px;text-align:center">
+<div style="font-size:12px;opacity:0.9;margin-bottom:5px">${conservativeLabel}</div>
+<div style="font-size:16px;font-weight:bold">${majorSellLabel}</div>
+</div>
+</div>
+`;
+}
+
+document.getElementById('modalTitle').textContent = `${item.symbol} ${t.modalTitle}`;
+document.getElementById('modalBody').innerHTML = `
+<div class="space-y-4">
+<!-- Header with price -->
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:3px solid #667eea;margin-bottom:20px">
+<div style="font-size:36px;font-weight:bold;color:#667eea">${item.symbol}</div>
+<div style="text-align:right">
+<div style="font-size:36px;font-weight:bold">$${p.toFixed(2)}</div>
+<div style="font-size:20px;font-weight:600;color:${isUp ? '#10b981' : '#ef4444'}">${isUp ? '+' : ''}${d.changePercent || 'N/A'}</div>
+</div>
+</div>
+
+<!-- Holding info -->
+${holdingHtml}
+
+<!-- Summary -->
+<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:20px;border-radius:12px;text-align:center;font-size:18px;font-weight:600;margin:20px 0">
+💡 ${a.summary || ''}
+</div>
+
+<!-- Support/Resistance levels -->
+${levelsHtml}
+
+<!-- Buy plan -->
+${buyPlanHtml}
+
+<!-- Sell plan -->
+${sellPlanHtml}
+
+<!-- Additional sections -->
+${sectionsHtml}
+
+<!-- Expected gains -->
+${expectedGainsHtml}
+
+<!-- Risks -->
+${risksHtml}
+
+<!-- Action recommendations -->
+${actionsHtml}
+
+<!-- Analysis time -->
+<div style="text-align:center;color:#999;margin-top:20px;padding-top:20px;border-top:2px solid #e0e0e0;font-size:12px">
+${t.analysisTime}: ${item.date}
+</div>
+</div>
+`;
+
+document.getElementById('modal').classList.add('show');
+document.body.style.overflow = 'hidden';
+}
+
+async function downloadReport(idx) {
+const t = translations[currentLang];
+const analyses = JSON.parse(localStorage.getItem('stockAnalyses') || '[]');
+const item = analyses[idx];
+if (!item) return;
+
+const d = item.data || {};
+const a = generateAnalysis(item.symbol, d, currentLang);
+const holdings = JSON.parse(localStorage.getItem('stockHoldings') || '{}');
+const holding = holdings[item.symbol];
+const p = d.price || 0;
+const isUp = (d.change || 0) >= 0;
+
+// 创建一个临时容器来渲染报告
+const reportContainer = document.createElement('div');
+reportContainer.style.position = 'absolute';
+reportContainer.style.left = '-9999px';
+reportContainer.style.width = '800px';
+reportContainer.style.background = '#fff';
+reportContainer.style.padding = '40px';
+reportContainer.style.fontFamily = 'Arial, sans-serif';
+
+// 构建持仓信息
+let holdingHtml = '';
+if (holding) {
+const pnl = ((p - holding.cost) / holding.cost * 100);
+const pnlAmount = (p - holding.cost) * holding.shares;
+const pnlClass = pnl >= 0 ? 'color:#10b981' : 'color:#ef4444';
+const pnlSign = pnl >= 0 ? '+' : '';
+
+holdingHtml = `
+<div style="background:#f0f9ff;border-left:4px solid #3b82f6;padding:15px;margin:15px 0;border-radius:8px">
+💼 ${t.holding}: ${t.cost}$${holding.cost} | ${t.shares}${holding.shares}股 | <span style="${pnlClass};font-weight:bold">${pnlSign}${pnl.toFixed(2)}% ($${pnlSign}${pnlAmount.toFixed(0)})</span>
+</div>
+`;
+}
+
+// 构建完整的HTML内容
+reportContainer.innerHTML = `
+<div style="max-width:800px;margin:0 auto">
+<h1 style="text-align:center;color:#667eea;margin-bottom:20px">${item.symbol} ${t.modalTitle}</h1>
+<div style="text-align:center;margin-bottom:30px">
+<div style="display:inline-block;text-align:left">
+<div style="font-size:36px;font-weight:bold;color:#667eea">${item.symbol}</div>
+<div style="font-size:36px;font-weight:bold">$${p.toFixed(2)}</div>
+<div style="font-size:20px;font-weight:600;color:${isUp ? '#10b981' : '#ef4444'}">${isUp ? '+' : ''}${d.changePercent || 'N/A'}</div>
+</div>
+</div>
+
+${holdingHtml}
+
+<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:20px;border-radius:12px;text-align:center;font-size:16px;font-weight:600;margin:20px 0">
+💡 ${a.summary || ''}
+</div>
+
+${(a.supports || a.resistances) ? `
+<div style="margin:20px 0">
+<h3 style="color:#667eea;font-size:18px;margin-bottom:15px">📍 ${t.keyLevels}</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+${(a.supports || []).map((s, i) => `
+<div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #10b981">
+<div style="font-size:12px;font-weight:600;color:#666;margin-bottom:5px">${t.support} ${i+1}</div>
+<div style="font-size:13px;color:#1a1a1a">${s}</div>
+</div>
+`).join('')}
+${(a.resistances || []).map((r, i) => `
+<div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #ef4444">
+<div style="font-size:12px;font-weight:600;color:#666;margin-bottom:5px">${t.resistance} ${i+1}</div>
+<div style="font-size:13px;color:#1a1a1a">${r}</div>
+</div>
+`).join('')}
+</div>
+</div>
+` : ''}
+
+${a.buyPoints && a.buyPoints.length > 0 ? `
+<div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);padding:20px;border-radius:15px;margin:20px 0">
+<h3 style="color:#fff;font-size:18px;margin-bottom:15px;text-align:center">🎯 ${t.buyPoints}</h3>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+${a.buyPoints.slice(0, 3).map((bp, i) => `
+<div style="background:#fff;padding:12px;border-radius:10px">
+<div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:5px">${i === 0 ? (currentLang === 'zh' ? '短期机会' : currentLang === 'es' ? 'Corto' : 'Short') : i === 1 ? (currentLang === 'zh' ? '中期机会' : currentLang === 'es' ? 'Medio' : 'Mid') : (currentLang === 'zh' ? '波段策略' : currentLang === 'es' ? 'Estrategia' : 'Swing')}</div>
+<div style="font-size:12px;color:#333;line-height:1.4">${bp}</div>
+</div>
+`).join('')}
+</div>
+</div>
+` : ''}
+
+${a.sellPoints && a.sellPoints.length > 0 ? `
+<div style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);padding:20px;border-radius:15px;margin:20px 0">
+<h3 style="color:#fff;font-size:18px;margin-bottom:15px;text-align:center">🔤 ${t.sellPoints}</h3>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+${a.sellPoints.slice(0, 3).map((sp, i) => `
+<div style="background:#fff;padding:12px;border-radius:10px">
+<div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:5px">${i === 0 ? (currentLang === 'zh' ? '短期' : currentLang === 'es' ? 'Corto' : 'Short') : i === 1 ? (currentLang === 'zh' ? '中期' : currentLang === 'es' ? 'Medio' : 'Mid') : (currentLang === 'zh' ? '长期' : currentLang === 'es' ? 'Largo' : 'Long')}</div>
+<div style="font-size:12px;color:#333;line-height:1.4">${sp}</div>
+</div>
+`).join('')}
+</div>
+</div>
+` : ''}
+
+${a.risks && a.risks.length > 0 ? a.risks.map(risk => `
+<div style="background:#fef2f2;border-left:4px solid #ef4444;padding:15px;border-radius:8px;margin:15px 0">
+<strong>⚠️ ${currentLang === 'zh' ? '核心风险' : currentLang === 'es' ? 'Riesgo' : 'Core Risk'}:</strong> ${risk}
+</div>
+`).join('') : ''}
+
+${a.expectedGains ? `
+<div style="background:#e8f5e9;border-left:4px solid #10b981;padding:15px;border-radius:8px;margin:15px 0">
+<strong>📈 ${currentLang === 'zh' ? '预期涨幅' : currentLang === 'es' ? 'Ganancias' : 'Expected Gains'}:</strong> 
+${currentLang === 'zh' ? '短期' : currentLang === 'es' ? 'Corto' : 'Short'}: ${a.expectedGains.short}, 
+${currentLang === 'zh' ? '中期' : currentLang === 'es' ? 'Medio' : 'Mid'}: ${a.expectedGains.mid}, 
+${currentLang === 'zh' ? '长期' : currentLang === 'es' ? 'Largo' : 'Long'}: ${a.expectedGains.long}
+</div>
+` : ''}
+
+<div style="text-align:center;color:#999;margin-top:30px;padding-top:20px;border-top:2px solid #e0e0e0;font-size:12px">
+${t.analysisTime}: ${item.date}
+</div>
+</div>
+`;
+
+document.body.appendChild(reportContainer);
+
+try {
+// 使用 html2canvas 将容器转换为canvas
+const canvas = await html2canvas(reportContainer, {
+scale: 2,
+useCORS: true,
+logging: false,
+backgroundColor: '#ffffff'
+});
+
+// 创建PDF
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF({
+orientation: 'portrait',
+unit: 'mm',
+format: 'a4'
+});
+
+// 计算图片尺寸以适应A4页面
+const imgWidth = 210; // A4宽度（mm）
+const imgHeight = (canvas.height * imgWidth) / canvas.width;
+const imgData = canvas.toDataURL('image/png');
+
+// 如果内容超过一页，需要分页
+let heightLeft = imgHeight;
+let position = 0;
+
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+heightLeft -= 297; // A4高度
+
+while (heightLeft >= 0) {
+position = heightLeft - imgHeight;
+pdf.addPage();
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+heightLeft -= 297;
+}
+
+// 保存PDF
+const fileName = `${item.symbol}_${currentLang === 'zh' ? '分析报告' : currentLang === 'es' ? 'Informe' : 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`;
+pdf.save(fileName);
+
+const msg = currentLang === 'zh' ? 'PDF报告已下载' : currentLang === 'es' ? 'PDF descargado' : 'PDF downloaded';
+alert(`✅ ${msg}!`);
+
+} catch (error) {
+console.error('PDF generation error:', error);
+const errMsg = currentLang === 'zh' ? 'PDF生成失败，请重试' : currentLang === 'es' ? 'Error al generar PDF' : 'PDF generation failed';
+alert(`❌ ${errMsg}`);
+} finally {
+// 清理临时容器
+document.body.removeChild(reportContainer);
+}
+}
+
+function closeModal() {
+document.getElementById('modal').classList.remove('show');
+document.body.style.overflow = '';
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+if (e.target.id === 'modal') closeModal();
+});
+
+document.addEventListener('keydown', e => {
+if (e.key === 'Escape') closeModal();
+});
+
+const params = new URLSearchParams(window.location.search);
+const symbol = params.get('symbol');
+
+applyLanguage();
+loadHistory();
+
+if (symbol) {
+const analyses = JSON.parse(localStorage.getItem('stockAnalyses') || '[]');
+const idx = analyses.findIndex(a => a.symbol === symbol);
+if (idx >= 0) setTimeout(() => viewDetail(idx), 500);
+}
+</script>
+
+</body>
+</html>
